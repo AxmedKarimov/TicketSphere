@@ -1,8 +1,15 @@
 "use client";
-import React, { useState, useEffect, ChangeEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  ChangeEvent,
+} from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../supabase/client";
+import Image from "next/image";
 
 type Ticket = {
   id: number | null;
@@ -16,38 +23,50 @@ type Ticket = {
   created_at?: string;
 };
 
+type BuyedTicket = Ticket & { username: string };
+
 export default function Home() {
   const [searchParams, setSearchParams] = useState<{
     from: string;
     to: string;
-  }>({
-    from: "",
-    to: "",
-  });
+  }>({ from: "", to: "" });
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
-
-  const supabase = createClient();
   const [showModal, setShowModal] = useState<boolean>(false);
   const [adminPassword, setAdminPassword] = useState<string>("");
 
   const router = useRouter();
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
+  const supabase = useMemo(() => createClient(), []);
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
       const { data, error } = await supabase.from("tickets").select("*");
       if (error) throw error;
-
       setTickets(data as Ticket[]);
       setFilteredTickets(data as Ticket[]);
-    } catch (error: any) {
-      console.error("Error fetching tickets:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error fetching tickets:", error.message);
+      }
     }
-  };
+  }, [supabase]);
+
+  const fetchBuyedTickets = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.from("buyedTickets").select("*");
+      if (error) throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error fetching buyed tickets:", error.message);
+      }
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchTickets();
+    fetchBuyedTickets();
+  }, [fetchTickets, fetchBuyedTickets]);
 
   const handleChange = (
     e: ChangeEvent<HTMLSelectElement | HTMLInputElement>
@@ -106,8 +125,10 @@ export default function Home() {
       }
 
       alert("Ticket muvaffaqiyatli sotib olindi!");
-    } catch (error: any) {
-      console.error("Error buying ticket:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error buying ticket:", error.message);
+      }
       alert("Ticket sotib olishda xatolik yuz berdi!");
     }
   };
@@ -138,15 +159,19 @@ export default function Home() {
   return (
     <div>
       <div className="w-full h-24 bg-slate-200 flex justify-around items-center">
-        <img className="w-20 rounded-full" src="/logo.webp" alt="Logo" />
+        <Image
+          className="w-20 rounded-full"
+          src="/logo.webp"
+          alt="Logo"
+          width={100}
+          height={100}
+        />
         <h1 className="text-4xl">TicketSphere</h1>
-        {/* Admin tugmasi bosilganda modal chiqadi */}
         <button className="btn btn-secondary" onClick={handleAdminClick}>
           Admin?
         </button>
       </div>
 
-      {/* Admin uchun modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg">
