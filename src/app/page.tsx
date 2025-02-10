@@ -1,101 +1,298 @@
-import Image from "next/image";
+"use client";
+import React, { useState, useEffect, ChangeEvent } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { useRouter } from "next/navigation";
+import { supabase } from "./supBase";
+
+type Ticket = {
+  id: number | null;
+  from: string;
+  to: string;
+  date: string;
+  time: string;
+  price: number;
+  count: number;
+  modelOfBus: string;
+  created_at?: string;
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [searchParams, setSearchParams] = useState<{
+    from: string;
+    to: string;
+  }>({
+    from: "",
+    to: "",
+  });
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  // Admin modal state
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [adminPassword, setAdminPassword] = useState<string>("");
+
+  const router = useRouter();
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  const fetchTickets = async () => {
+    try {
+      const { data, error } = await supabase.from("tickets").select("*");
+      if (error) throw error;
+      // Har ikkala state ni yangilaymiz, shunda sahifa yuklanganda barcha ticketlar ko‘rsatiladi
+      setTickets(data as Ticket[]);
+      setFilteredTickets(data as Ticket[]);
+    } catch (error: any) {
+      console.error("Error fetching tickets:", error.message);
+    }
+  };
+
+  const handleChange = (
+    e: ChangeEvent<HTMLSelectElement | HTMLInputElement>
+  ) => {
+    setSearchParams((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSearch = () => {
+    if (!searchParams.from || !searchParams.to) {
+      alert("Iltimos, FROM va TO maydonlarini tanlang!");
+      return;
+    }
+    const results = tickets.filter(
+      (ticket) =>
+        ticket.from === searchParams.from && ticket.to === searchParams.to
+    );
+    setFilteredTickets(results);
+  };
+
+  const handleBuy = async (ticket: Ticket, index: number) => {
+    const username = prompt("Iltimos, foydalanuvchi ismingizni kiriting:");
+    if (!username) return;
+
+    try {
+      // BuyedTickets jadvaliga shu ticketni qo'shamiz (username bilan)
+      const { error: insertError } = await supabase
+        .from("buyedTickets")
+        .insert({
+          ...ticket,
+          username,
+        });
+      if (insertError) throw insertError;
+
+      // Ticket countini bittaga kamaytiramiz
+      const newCount = ticket.count - 1;
+      if (newCount > 0) {
+        // Agar yangi count > 0 bo'lsa, tickets jadvalidagi count maydonini update qilamiz
+        const { error: updateError } = await supabase
+          .from("tickets")
+          .update({ count: newCount })
+          .eq("id", ticket.id);
+        if (updateError) throw updateError;
+
+        setFilteredTickets((prev) =>
+          prev.map((t) => (t.id === ticket.id ? { ...t, count: newCount } : t))
+        );
+        setTickets((prev) =>
+          prev.map((t) => (t.id === ticket.id ? { ...t, count: newCount } : t))
+        );
+      } else {
+        // Agar yangi count 0 bo'lsa, tickets jadvalidan o'chiramiz
+        const { error: deleteError } = await supabase
+          .from("tickets")
+          .delete()
+          .eq("id", ticket.id);
+        if (deleteError) throw deleteError;
+
+        setFilteredTickets((prev) => prev.filter((t) => t.id !== ticket.id));
+        setTickets((prev) => prev.filter((t) => t.id !== ticket.id));
+      }
+
+      alert("Ticket muvaffaqiyatli sotib olindi!");
+    } catch (error: any) {
+      console.error("Error buying ticket:", error.message);
+      alert("Ticket sotib olishda xatolik yuz berdi!");
+    }
+  };
+
+  // Admin modal handlerlari
+  const handleAdminClick = () => {
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setAdminPassword("");
+  };
+
+  const handleAdminSubmit = () => {
+    if (adminPassword === "admin123") {
+      // To'g'ri parol bo'lsa, /admin sahifasiga yo'naltiramiz
+      router.push("/admin");
+    } else {
+      alert("Noto'g'ri parol!");
+    }
+    setAdminPassword("");
+    setShowModal(false);
+  };
+
+  const handleAdminPasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setAdminPassword(e.target.value);
+  };
+
+  return (
+    <div>
+      <div className="w-full h-24 bg-slate-200 flex justify-around items-center">
+        <img className="w-20 rounded-full" src="/logo.webp" alt="Logo" />
+        <h1 className="text-4xl">TicketSphere</h1>
+        {/* Admin tugmasi bosilganda modal chiqadi */}
+        <button className="btn btn-secondary" onClick={handleAdminClick}>
+          Admin?
+        </button>
+      </div>
+
+      {/* Admin uchun modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Admin Parol</h2>
+            <input
+              type="password"
+              className="form-control mb-4"
+              placeholder="Parolni kiriting"
+              value={adminPassword}
+              onChange={handleAdminPasswordChange}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <div className="flex justify-end gap-2">
+              <button className="btn btn-secondary" onClick={handleModalClose}>
+                Bekor qilish
+              </button>
+              <button className="btn btn-primary" onClick={handleAdminSubmit}>
+                Tasdiqlash
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+
+      <div className="w-full h-screen bg-slate-100 p-4">
+        <div className="w-3/5 mx-auto flex items-center justify-center gap-3">
+          <select
+            className="form-control w-48 mb-4"
+            name="from"
+            onChange={handleChange}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              From
+            </option>
+            {[
+              "Sirdaryo",
+              "Navoiy",
+              "Jizzax",
+              "Xorazm",
+              "Buxoro",
+              "Surxondaryo",
+              "Namangan",
+              "Andijon",
+              "Qashqadaryo",
+              "Samarqand",
+              "Fargʻona",
+              "Toshkent",
+            ].map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="form-control w-48 mb-4"
+            name="to"
+            onChange={handleChange}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              To
+            </option>
+            {[
+              "Sirdaryo",
+              "Navoiy",
+              "Jizzax",
+              "Xorazm",
+              "Buxoro",
+              "Surxondaryo",
+              "Namangan",
+              "Andijon",
+              "Qashqadaryo",
+              "Samarqand",
+              "Fargʻona",
+              "Toshkent",
+            ].map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
+
+          <button className="btn btn-secondary mb-4" onClick={handleSearch}>
+            Search
+          </button>
+        </div>
+
+        <div className="w-3/5 mx-auto border-2 border-slate-600 rounded-lg h-3/5 overflow-auto p-3">
+          {filteredTickets.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTickets.map((ticket, index) => (
+                <div
+                  key={ticket.id ?? index}
+                  className="bg-white shadow-lg rounded-lg p-4"
+                >
+                  <h3 className="text-xl font-semibold text-center">
+                    {ticket.from} → {ticket.to}
+                  </h3>
+                  <p className="text-gray-700 text-center mt-2">
+                    📅 {ticket.date} | 🕒 {ticket.time}
+                  </p>
+                  <p className="text-gray-700 text-center">
+                    💰 {ticket.price} so'm
+                  </p>
+                  <p
+                    className={`text-center ${
+                      ticket.count > 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {ticket.count > 0
+                      ? `Yana ${ticket.count} ta mavjud`
+                      : "Sotilgan!"}
+                  </p>
+                  <p className="text-gray-700 text-center">
+                    🚍 {ticket.modelOfBus}
+                  </p>
+                  <button
+                    className={`btn ${
+                      ticket.count > 0
+                        ? "btn-primary"
+                        : "btn-secondary disabled"
+                    } mt-4 w-full`}
+                    onClick={() => handleBuy(ticket, index)}
+                    disabled={ticket.count <= 0}
+                  >
+                    {ticket.count > 0 ? "Buy" : "Sold Out"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-lg text-gray-700">
+              {searchParams.from && searchParams.to
+                ? "Bu yo'nalishda ticket topilmadi!"
+                : "Yo'nalishni tanlab qidiring."}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

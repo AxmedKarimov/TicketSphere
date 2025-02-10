@@ -1,0 +1,154 @@
+{
+  "tickets": [
+    {
+      "id": "5977",
+      "from": "Navoiy",
+      "to": "Jizzax",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "7365",
+      "from": "Toshkent",
+      "to": "Buxoro",
+      "date": "2025-03-01"
+    },
+    {
+      "id": "8260",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "6b0c",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "d0cc",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "0e34",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "ce65",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "d1c0",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "2534",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "5274",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "0cef",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "d314",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "aa42",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "6646",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "06ad",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31"
+    },
+    {
+      "id": "bb55",
+      "from": "Surxondaryo",
+      "to": "Andijon",
+      "date": "2025-02-07"
+    },
+    {
+      "id": null,
+      "from": "Buxoro",
+      "to": "Namangan",
+      "date": "2025-02-12"
+    },
+    {
+      "id": null,
+      "from": "Buxoro",
+      "to": "Namangan",
+      "date": "2025-09-11"
+    },
+    {
+      "id": null,
+      "from": "Jizzax",
+      "to": "Buxoro",
+      "date": "2025-02-11"
+    },
+    {
+      "id": null,
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-02-11"
+    }
+  ],
+  "buyedTickets": [
+    {
+      "id": "d0cc",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31",
+      "username": "axmed"
+    },
+    {
+      "id": "6b0c",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31",
+      "username": "samir "
+    },
+    {
+      "id": "8260",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31",
+      "username": "ravshan"
+    },
+    {
+      "id": "d0cc",
+      "from": "Buxoro",
+      "to": "Toshkent",
+      "date": "2025-01-31",
+      "username": "ozod"
+    }
+  ]
+}
