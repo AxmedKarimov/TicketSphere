@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { supabase } from "../supBase";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Link from "next/link";
+import { createClient } from "../../../supabase/client";
 
 type Ticket = {
   id: number | null;
@@ -33,6 +33,7 @@ const Admin: React.FC = () => {
   const [ticket, setTicket] = useState<Ticket>(initialTicketState);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [buyedTickets, setBuyedTickets] = useState<BuyedTicket[]>([]);
+  const supabase = createClient();
 
   useEffect(() => {
     fetchTickets();

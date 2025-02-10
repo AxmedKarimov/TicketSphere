@@ -2,7 +2,7 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useRouter } from "next/navigation";
-import { supabase } from "./supBase";
+import { createClient } from "../../supabase/client";
 
 type Ticket = {
   id: number | null;
@@ -27,7 +27,7 @@ export default function Home() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
 
-  // Admin modal state
+  const supabase = createClient();
   const [showModal, setShowModal] = useState<boolean>(false);
   const [adminPassword, setAdminPassword] = useState<string>("");
 
@@ -41,7 +41,7 @@ export default function Home() {
     try {
       const { data, error } = await supabase.from("tickets").select("*");
       if (error) throw error;
-      // Har ikkala state ni yangilaymiz, shunda sahifa yuklanganda barcha ticketlar ko‘rsatiladi
+
       setTickets(data as Ticket[]);
       setFilteredTickets(data as Ticket[]);
     } catch (error: any) {
@@ -72,7 +72,6 @@ export default function Home() {
     if (!username) return;
 
     try {
-      // BuyedTickets jadvaliga shu ticketni qo'shamiz (username bilan)
       const { error: insertError } = await supabase
         .from("buyedTickets")
         .insert({
@@ -81,10 +80,8 @@ export default function Home() {
         });
       if (insertError) throw insertError;
 
-      // Ticket countini bittaga kamaytiramiz
       const newCount = ticket.count - 1;
       if (newCount > 0) {
-        // Agar yangi count > 0 bo'lsa, tickets jadvalidagi count maydonini update qilamiz
         const { error: updateError } = await supabase
           .from("tickets")
           .update({ count: newCount })
@@ -98,7 +95,6 @@ export default function Home() {
           prev.map((t) => (t.id === ticket.id ? { ...t, count: newCount } : t))
         );
       } else {
-        // Agar yangi count 0 bo'lsa, tickets jadvalidan o'chiramiz
         const { error: deleteError } = await supabase
           .from("tickets")
           .delete()
@@ -116,7 +112,6 @@ export default function Home() {
     }
   };
 
-  // Admin modal handlerlari
   const handleAdminClick = () => {
     setShowModal(true);
   };
@@ -128,7 +123,6 @@ export default function Home() {
 
   const handleAdminSubmit = () => {
     if (adminPassword === "admin123") {
-      // To'g'ri parol bo'lsa, /admin sahifasiga yo'naltiramiz
       router.push("/admin");
     } else {
       alert("Noto'g'ri parol!");
