@@ -61,21 +61,28 @@ const Admin: React.FC = () => {
     }
   };
 
-  React.useEffect(() => {
-    fetchTickets();
-    fetchBuyedTickets();
-  }, []);
+  fetchTickets();
+  fetchBuyedTickets();
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ): void => {
     const { name, value } = e.target;
-    const parsedValue = name === "price" || name === "count" ? parseFloat(value) : value;
+    const parsedValue =
+      name === "price" || name === "count" ? parseFloat(value) : value;
     setTicket({ ...ticket, [name]: parsedValue });
   };
 
   const handleSaveOrUpdate = async (): Promise<void> => {
-    if (!ticket.from || !ticket.to || !ticket.date || !ticket.time || !ticket.price || !ticket.count || !ticket.modelOfBus) {
+    if (
+      !ticket.from ||
+      !ticket.to ||
+      !ticket.date ||
+      !ticket.time ||
+      !ticket.price ||
+      !ticket.count ||
+      !ticket.modelOfBus
+    ) {
       console.log("Barcha maydonlar to'ldirilishi shart!");
       return;
     }
@@ -213,7 +220,16 @@ const Admin: React.FC = () => {
             <option value="" disabled>
               Select Time
             </option>
-            {["06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"].map((timeOption) => (
+            {[
+              "06:00",
+              "08:00",
+              "10:00",
+              "12:00",
+              "14:00",
+              "16:00",
+              "18:00",
+              "20:00",
+            ].map((timeOption) => (
               <option key={timeOption} value={timeOption}>
                 {timeOption}
               </option>
@@ -244,14 +260,24 @@ const Admin: React.FC = () => {
             <option value="" disabled>
               Select Bus Model
             </option>
-            {["Mercedes-Benz", "Isuzu", "Yutong", "Higer", "MAN", "Scania", "Raketa"].map((model) => (
+            {[
+              "Mercedes-Benz",
+              "Isuzu",
+              "Yutong",
+              "Higer",
+              "MAN",
+              "Scania",
+              "Raketa",
+            ].map((model) => (
               <option key={model} value={model}>
                 {model}
               </option>
             ))}
           </select>
           <button
-            className={`btn ${ticket.id ? "btn-warning" : "btn-primary"} w-full`}
+            className={`btn ${
+              ticket.id ? "btn-warning" : "btn-primary"
+            } w-full`}
             onClick={handleSaveOrUpdate}
           >
             {ticket.id ? "Update Ticket" : "Save Ticket"}
