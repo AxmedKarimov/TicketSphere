@@ -1,11 +1,5 @@
 "use client";
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  ChangeEvent,
-} from "react";
+import React, { useState, useCallback, useMemo, ChangeEvent } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../supabase/client";
