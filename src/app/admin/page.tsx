@@ -35,7 +35,7 @@ const Admin: React.FC = () => {
   const [buyedTickets, setBuyedTickets] = useState<BuyedTicket[]>([]);
   const supabase = createClient();
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (): Promise<void> => {
     try {
       const { data, error } = await supabase
         .from("tickets")
@@ -48,7 +48,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  const fetchBuyedTickets = async () => {
+  const fetchBuyedTickets = async (): Promise<void> => {
     try {
       const { data, error } = await supabase
         .from("buyedTickets")
@@ -60,28 +60,22 @@ const Admin: React.FC = () => {
       console.error("Fetch buyed tickets error:", error.message);
     }
   };
-  fetchTickets();
-  fetchBuyedTickets();
+
+  React.useEffect(() => {
+    fetchTickets();
+    fetchBuyedTickets();
+  }, []);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  ): void => {
     const { name, value } = e.target;
-    const parsedValue =
-      name === "price" || name === "count" ? parseFloat(value) : value;
+    const parsedValue = name === "price" || name === "count" ? parseFloat(value) : value;
     setTicket({ ...ticket, [name]: parsedValue });
   };
 
-  const handleSaveOrUpdate = async () => {
-    if (
-      !ticket.from ||
-      !ticket.to ||
-      !ticket.date ||
-      !ticket.time ||
-      !ticket.price ||
-      !ticket.count ||
-      !ticket.modelOfBus
-    ) {
+  const handleSaveOrUpdate = async (): Promise<void> => {
+    if (!ticket.from || !ticket.to || !ticket.date || !ticket.time || !ticket.price || !ticket.count || !ticket.modelOfBus) {
       console.log("Barcha maydonlar to'ldirilishi shart!");
       return;
     }
@@ -123,11 +117,11 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleEdit = (t: Ticket) => {
+  const handleEdit = (t: Ticket): void => {
     setTicket(t);
   };
 
-  const handleDelete = async (id: number | null) => {
+  const handleDelete = async (id: number | null): Promise<void> => {
     if (!id) return;
     try {
       const { error } = await supabase.from("tickets").delete().eq("id", id);
@@ -140,7 +134,7 @@ const Admin: React.FC = () => {
 
   return (
     <div className="p-3">
-      <Link href={"/"} className="btn btn-primary">
+      <Link href="/" className="btn btn-primary">
         back
       </Link>
       <h1 className="text-5xl font-bold mb-5 text-center">Admin Page</h1>
@@ -219,16 +213,7 @@ const Admin: React.FC = () => {
             <option value="" disabled>
               Select Time
             </option>
-            {[
-              "06:00",
-              "08:00",
-              "10:00",
-              "12:00",
-              "14:00",
-              "16:00",
-              "18:00",
-              "20:00",
-            ].map((timeOption) => (
+            {["06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"].map((timeOption) => (
               <option key={timeOption} value={timeOption}>
                 {timeOption}
               </option>
@@ -259,24 +244,14 @@ const Admin: React.FC = () => {
             <option value="" disabled>
               Select Bus Model
             </option>
-            {[
-              "Mercedes-Benz",
-              "Isuzu",
-              "Yutong",
-              "Higer",
-              "MAN",
-              "Scania",
-              "Raketa",
-            ].map((model) => (
+            {["Mercedes-Benz", "Isuzu", "Yutong", "Higer", "MAN", "Scania", "Raketa"].map((model) => (
               <option key={model} value={model}>
                 {model}
               </option>
             ))}
           </select>
           <button
-            className={`btn ${
-              ticket.id ? "btn-warning" : "btn-primary"
-            } w-full`}
+            className={`btn ${ticket.id ? "btn-warning" : "btn-primary"} w-full`}
             onClick={handleSaveOrUpdate}
           >
             {ticket.id ? "Update Ticket" : "Save Ticket"}
