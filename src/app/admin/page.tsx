@@ -35,11 +35,6 @@ const Admin: React.FC = () => {
   const [buyedTickets, setBuyedTickets] = useState<BuyedTicket[]>([]);
   const supabase = createClient();
 
-  useEffect(() => {
-    fetchTickets();
-    fetchBuyedTickets();
-  }, []);
-
   const fetchTickets = async () => {
     try {
       const { data, error } = await supabase
@@ -65,6 +60,8 @@ const Admin: React.FC = () => {
       console.error("Fetch buyed tickets error:", error.message);
     }
   };
+  fetchTickets();
+  fetchBuyedTickets();
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -76,7 +73,6 @@ const Admin: React.FC = () => {
   };
 
   const handleSaveOrUpdate = async () => {
-    // Agar qatorlardan birortasi bo'sh bo'lsa (0 ham falsy bo'lgani uchun, agar 0 narx yoki 0 soni ruxsat etilmasa) qaytaramiz.
     if (
       !ticket.from ||
       !ticket.to ||
@@ -93,7 +89,6 @@ const Admin: React.FC = () => {
     try {
       let error;
       if (ticket.id) {
-        // Mavjud ticketni update qilamiz
         ({ error } = await supabase
           .from("tickets")
           .update({
@@ -107,7 +102,6 @@ const Admin: React.FC = () => {
           })
           .eq("id", ticket.id));
       } else {
-        // Yangi ticket qo'shishda "id" maydonini to'liq olib tashlaymiz
         const ticketWithoutId = {
           from: ticket.from,
           to: ticket.to,
@@ -151,7 +145,6 @@ const Admin: React.FC = () => {
       </Link>
       <h1 className="text-5xl font-bold mb-5 text-center">Admin Page</h1>
       <div className="flex flex-wrap justify-center items-start gap-7">
-        {/* Ticket Form */}
         <div className="card p-3 w-80 mx-auto">
           <h2 className="text-2xl font-bold mb-3">Ticket Form</h2>
           <select

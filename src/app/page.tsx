@@ -63,10 +63,8 @@ export default function Home() {
     }
   }, [supabase]);
 
-  useEffect(() => {
-    fetchTickets();
-    fetchBuyedTickets();
-  }, [fetchTickets, fetchBuyedTickets]);
+  fetchTickets();
+  fetchBuyedTickets();
 
   const handleChange = (
     e: ChangeEvent<HTMLSelectElement | HTMLInputElement>
