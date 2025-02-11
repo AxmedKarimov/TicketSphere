@@ -41,10 +41,13 @@ const Admin: React.FC = () => {
         .from("tickets")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error) throw error;
+
+      if (error) throw new Error(error.message);
       setTickets(data as Ticket[]);
-    } catch (error: any) {
-      console.error("Fetch tickets error:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Fetch tickets error:", error.message);
+      }
     }
   };
 
@@ -54,10 +57,13 @@ const Admin: React.FC = () => {
         .from("buyedTickets")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error) throw error;
+
+      if (error) throw new Error(error.message);
       setBuyedTickets(data as BuyedTicket[]);
-    } catch (error: any) {
-      console.error("Fetch buyed tickets error:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Fetch buyed tickets error:", error.message);
+      }
     }
   };
 
@@ -68,8 +74,9 @@ const Admin: React.FC = () => {
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ): void => {
     const { name, value } = e.target;
-    const parsedValue =
-      name === "price" || name === "count" ? parseFloat(value) : value;
+    const parsedValue = ["price", "count"].includes(name)
+      ? parseFloat(value)
+      : value;
     setTicket({ ...ticket, [name]: parsedValue });
   };
 
@@ -88,9 +95,10 @@ const Admin: React.FC = () => {
     }
 
     try {
-      let error;
+      let error: { message: string } | null = null;
+
       if (ticket.id) {
-        ({ error } = await supabase
+        const { error: updateError } = await supabase
           .from("tickets")
           .update({
             from: ticket.from,
@@ -101,7 +109,9 @@ const Admin: React.FC = () => {
             count: ticket.count,
             modelOfBus: ticket.modelOfBus,
           })
-          .eq("id", ticket.id));
+          .eq("id", ticket.id);
+
+        error = updateError;
       } else {
         const ticketWithoutId = {
           from: ticket.from,
@@ -112,15 +122,21 @@ const Admin: React.FC = () => {
           count: ticket.count,
           modelOfBus: ticket.modelOfBus,
         };
-        ({ error } = await supabase.from("tickets").insert([ticketWithoutId]));
+
+        const { error: insertError } = await supabase
+          .from("tickets")
+          .insert([ticketWithoutId]);
+        error = insertError;
       }
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
 
       setTicket(initialTicketState);
       fetchTickets();
-    } catch (error: any) {
-      console.error("Supabase error:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Supabase error:", error.message);
+      }
     }
   };
 
@@ -130,12 +146,15 @@ const Admin: React.FC = () => {
 
   const handleDelete = async (id: number | null): Promise<void> => {
     if (!id) return;
+
     try {
       const { error } = await supabase.from("tickets").delete().eq("id", id);
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       fetchTickets();
-    } catch (error: any) {
-      console.error("Delete error:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Delete error:", error.message);
+      }
     }
   };
 
