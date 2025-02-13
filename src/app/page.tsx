@@ -17,7 +17,6 @@ type Ticket = {
   created_at?: string;
 };
 
-type BuyedTicket = Ticket & { username: string };
 
 export default function Home() {
   const [searchParams, setSearchParams] = useState<{
