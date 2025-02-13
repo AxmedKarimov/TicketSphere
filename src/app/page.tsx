@@ -1,5 +1,11 @@
 "use client";
-import React, { useState, useCallback, useMemo, ChangeEvent } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  ChangeEvent,
+} from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../supabase/client";
@@ -17,19 +23,17 @@ type Ticket = {
   created_at?: string;
 };
 
-
 export default function Home() {
-  const [searchParams, setSearchParams] = useState<{
-    from: string;
-    to: string;
-  }>({ from: "", to: "" });
+  const [searchParams, setSearchParams] = useState({
+    from: "",
+    to: "",
+  });
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [adminPassword, setAdminPassword] = useState<string>("");
+  const [showModal, setShowModal] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
 
   const router = useRouter();
-
   const supabase = useMemo(() => createClient(), []);
 
   const fetchTickets = useCallback(async () => {
@@ -38,10 +42,8 @@ export default function Home() {
       if (error) throw error;
       setTickets(data as Ticket[]);
       setFilteredTickets(data as Ticket[]);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error fetching tickets:", error.message);
-      }
+    } catch (error) {
+      console.error("Error fetching tickets:", (error as Error).message);
     }
   }, [supabase]);
 
@@ -49,19 +51,17 @@ export default function Home() {
     try {
       const { error } = await supabase.from("buyedTickets").select("*");
       if (error) throw error;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error fetching buyed tickets:", error.message);
-      }
+    } catch (error) {
+      console.error("Error fetching buyed tickets:", (error as Error).message);
     }
   }, [supabase]);
 
-  fetchTickets();
-  fetchBuyedTickets();
+  useEffect(() => {
+    fetchTickets();
+    fetchBuyedTickets();
+  }, [fetchTickets, fetchBuyedTickets]);
 
-  const handleChange = (
-    e: ChangeEvent<HTMLSelectElement | HTMLInputElement>
-  ) => {
+  const handleChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setSearchParams((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -71,23 +71,20 @@ export default function Home() {
       return;
     }
     const results = tickets.filter(
-      (ticket) =>
-        ticket.from === searchParams.from && ticket.to === searchParams.to
+      (ticket) => ticket.from === searchParams.from && ticket.to === searchParams.to
     );
     setFilteredTickets(results);
   };
 
-  const handleBuy = async (ticket: Ticket, index: number) => {
+  const handleBuy = async (ticket: Ticket) => {
     const username = prompt("Iltimos, foydalanuvchi ismingizni kiriting:");
     if (!username) return;
 
     try {
-      const { error: insertError } = await supabase
-        .from("buyedTickets")
-        .insert({
-          ...ticket,
-          username,
-        });
+      const { error: insertError } = await supabase.from("buyedTickets").insert({
+        ...ticket,
+        username,
+      });
       if (insertError) throw insertError;
 
       const newCount = ticket.count - 1;
@@ -101,9 +98,6 @@ export default function Home() {
         setFilteredTickets((prev) =>
           prev.map((t) => (t.id === ticket.id ? { ...t, count: newCount } : t))
         );
-        setTickets((prev) =>
-          prev.map((t) => (t.id === ticket.id ? { ...t, count: newCount } : t))
-        );
       } else {
         const { error: deleteError } = await supabase
           .from("tickets")
@@ -112,21 +106,16 @@ export default function Home() {
         if (deleteError) throw deleteError;
 
         setFilteredTickets((prev) => prev.filter((t) => t.id !== ticket.id));
-        setTickets((prev) => prev.filter((t) => t.id !== ticket.id));
       }
 
       alert("Ticket muvaffaqiyatli sotib olindi!");
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error buying ticket:", error.message);
-      }
+    } catch (error) {
+      console.error("Error buying ticket:", (error as Error).message);
       alert("Ticket sotib olishda xatolik yuz berdi!");
     }
   };
 
-  const handleAdminClick = () => {
-    setShowModal(true);
-  };
+  const handleAdminClick = () => setShowModal(true);
 
   const handleModalClose = () => {
     setShowModal(false);
@@ -137,7 +126,7 @@ export default function Home() {
     if (adminPassword === "admin123") {
       router.push("/admin");
     } else {
-      alert("Noto'g'ri parol!");
+      alert("Noto&#39;g&#39;ri parol!");
     }
     setAdminPassword("");
     setShowModal(false);
@@ -254,20 +243,15 @@ export default function Home() {
         <div className="w-3/5 mx-auto border-2 border-slate-600 rounded-lg h-3/5 overflow-auto p-3">
           {filteredTickets.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredTickets.map((ticket, index) => (
-                <div
-                  key={ticket.id ?? index}
-                  className="bg-white shadow-lg rounded-lg p-4"
-                >
+              {filteredTickets.map((ticket) => (
+                <div key={ticket.id} className="bg-white shadow-lg rounded-lg p-4">
                   <h3 className="text-xl font-semibold text-center">
                     {ticket.from} → {ticket.to}
                   </h3>
                   <p className="text-gray-700 text-center mt-2">
                     📅 {ticket.date} | 🕒 {ticket.time}
                   </p>
-                  <p className="text-gray-700 text-center">
-                    💰 {ticket.price} so'm
-                  </p>
+                  <p className="text-gray-700 text-center">💰 {ticket.price} so'm</p>
                   <p
                     className={`text-center ${
                       ticket.count > 0 ? "text-green-600" : "text-red-600"
@@ -277,16 +261,12 @@ export default function Home() {
                       ? `Yana ${ticket.count} ta mavjud`
                       : "Sotilgan!"}
                   </p>
-                  <p className="text-gray-700 text-center">
-                    🚍 {ticket.modelOfBus}
-                  </p>
+                  <p className="text-gray-700 text-center">🚍 {ticket.modelOfBus}</p>
                   <button
                     className={`btn ${
-                      ticket.count > 0
-                        ? "btn-primary"
-                        : "btn-secondary disabled"
+                      ticket.count > 0 ? "btn-primary" : "btn-secondary disabled"
                     } mt-4 w-full`}
-                    onClick={() => handleBuy(ticket, index)}
+                    onClick={() => handleBuy(ticket)}
                     disabled={ticket.count <= 0}
                   >
                     {ticket.count > 0 ? "Buy" : "Sold Out"}
