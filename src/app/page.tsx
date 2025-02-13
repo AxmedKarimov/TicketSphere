@@ -48,7 +48,7 @@ export default function Home() {
 
   const fetchBuyedTickets = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from("buyedTickets").select("*");
+      const { error } = await supabase.from("buyedTickets").select("*");
       if (error) throw error;
     } catch (error: unknown) {
       if (error instanceof Error) {
