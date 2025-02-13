@@ -61,7 +61,9 @@ export default function Home() {
     fetchBuyedTickets();
   }, [fetchTickets, fetchBuyedTickets]);
 
-  const handleChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLSelectElement | HTMLInputElement>
+  ) => {
     setSearchParams((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -71,7 +73,8 @@ export default function Home() {
       return;
     }
     const results = tickets.filter(
-      (ticket) => ticket.from === searchParams.from && ticket.to === searchParams.to
+      (ticket) =>
+        ticket.from === searchParams.from && ticket.to === searchParams.to
     );
     setFilteredTickets(results);
   };
@@ -81,10 +84,12 @@ export default function Home() {
     if (!username) return;
 
     try {
-      const { error: insertError } = await supabase.from("buyedTickets").insert({
-        ...ticket,
-        username,
-      });
+      const { error: insertError } = await supabase
+        .from("buyedTickets")
+        .insert({
+          ...ticket,
+          username,
+        });
       if (insertError) throw insertError;
 
       const newCount = ticket.count - 1;
@@ -244,14 +249,20 @@ export default function Home() {
           {filteredTickets.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredTickets.map((ticket) => (
-                <div key={ticket.id} className="bg-white shadow-lg rounded-lg p-4">
+                <div
+                  key={ticket.id}
+                  className="bg-white shadow-lg rounded-lg p-4"
+                >
                   <h3 className="text-xl font-semibold text-center">
                     {ticket.from} → {ticket.to}
                   </h3>
                   <p className="text-gray-700 text-center mt-2">
                     📅 {ticket.date} | 🕒 {ticket.time}
                   </p>
-                  <p className="text-gray-700 text-center">💰 {ticket.price} so'm</p>
+                  <p className="text-gray-700 text-center">
+                    {" "}
+                    {ticket.price} som
+                  </p>
                   <p
                     className={`text-center ${
                       ticket.count > 0 ? "text-green-600" : "text-red-600"
@@ -261,10 +272,14 @@ export default function Home() {
                       ? `Yana ${ticket.count} ta mavjud`
                       : "Sotilgan!"}
                   </p>
-                  <p className="text-gray-700 text-center">🚍 {ticket.modelOfBus}</p>
+                  <p className="text-gray-700 text-center">
+                    🚍 {ticket.modelOfBus}
+                  </p>
                   <button
                     className={`btn ${
-                      ticket.count > 0 ? "btn-primary" : "btn-secondary disabled"
+                      ticket.count > 0
+                        ? "btn-primary"
+                        : "btn-secondary disabled"
                     } mt-4 w-full`}
                     onClick={() => handleBuy(ticket)}
                     disabled={ticket.count <= 0}
